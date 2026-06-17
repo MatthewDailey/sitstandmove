@@ -35,6 +35,9 @@ struct PopoverView: View {
         }
         .padding(20)
         .frame(width: 260)
+        // Opaque, appearance-adaptive panel so text stays legible regardless of
+        // what shows through the translucent popover behind it.
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 
     // MARK: - Pieces
@@ -48,9 +51,9 @@ struct PopoverView: View {
                 } label: {
                     ZStack {
                         RoundedRectangle(cornerRadius: 11, style: .continuous)
-                            .fill(isCurrent ? p.tint : Color.primary.opacity(0.06))
+                            .fill(isCurrent ? p.tint : Color.secondary.opacity(0.16))
                         RoundedRectangle(cornerRadius: 11, style: .continuous)
-                            .strokeBorder(Color.primary.opacity(isCurrent ? 0 : 0.10), lineWidth: 1)
+                            .strokeBorder(Color.secondary.opacity(isCurrent ? 0 : 0.25), lineWidth: 1)
                         Image(systemName: p.symbolName)
                             .resizable()
                             .scaledToFit()
@@ -92,24 +95,17 @@ struct PopoverView: View {
 
     private func primaryButton(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title)
-                .font(.system(size: 14, weight: .semibold))
-                .frame(maxWidth: .infinity)
+            Text(title).font(.system(size: 14, weight: .semibold))
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .tint(phase.tint)
+        .buttonStyle(FilledButtonStyle(tint: phase.tint))
         .keyboardShortcut(.defaultAction)
     }
 
     private func secondaryButton(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title)
-                .font(.system(size: 14, weight: .medium))
-                .frame(maxWidth: .infinity)
+            Text(title).font(.system(size: 14, weight: .medium))
         }
-        .buttonStyle(.bordered)
-        .controlSize(.large)
+        .buttonStyle(OutlineButtonStyle())
     }
 
     // MARK: - Text
@@ -128,5 +124,33 @@ struct PopoverView: View {
         case .paused:       return "Paused"
         case .awaitingNext: return "Tap start to begin"
         }
+    }
+}
+
+/// A solid, tinted primary button. Custom (rather than `.borderedProminent`) so
+/// it renders consistently, including in the off-screen panel renderer.
+private struct FilledButtonStyle: ButtonStyle {
+    var tint: Color
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 9)
+            .foregroundStyle(.white)
+            .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(tint))
+            .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .opacity(configuration.isPressed ? 0.85 : 1)
+    }
+}
+
+/// A subtle bordered secondary button.
+private struct OutlineButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 9)
+            .foregroundStyle(.primary)
+            .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.secondary.opacity(0.18)))
+            .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .opacity(configuration.isPressed ? 0.85 : 1)
     }
 }
