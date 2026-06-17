@@ -9,8 +9,8 @@ action and a single button to start it.
 |:---:|:-----:|:----:|
 | <img src="assets/sit.png" width="140"> | <img src="assets/stand.png" width="140"> | <img src="assets/move.png" width="140"> |
 
-The little actor breathes while sitting, sways while standing, and marches in
-place while moving.
+The little actor breathes while sitting, sways while standing, and bobs along
+while walking.
 
 ## How it works
 

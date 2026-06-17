@@ -38,20 +38,26 @@ struct PopoverView: View {
     // MARK: - Pieces
 
     private var loopIndicator: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 12) {
             ForEach(Phase.loop, id: \.self) { p in
                 let isCurrent = p == phase
                 Button {
                     timer.selectStartPhase(p)
                 } label: {
-                    Image(systemName: p.symbolName)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(isCurrent ? p.tint : Color.secondary.opacity(0.45))
-                        .frame(width: 30, height: 30)
-                        .background(
-                            Circle().fill(isCurrent ? p.tint.opacity(0.15) : .clear)
-                        )
-                        .scaleEffect(isCurrent ? 1.1 : 1.0)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .fill(isCurrent ? p.tint : Color.primary.opacity(0.06))
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .strokeBorder(Color.primary.opacity(isCurrent ? 0 : 0.10), lineWidth: 1)
+                        Image(systemName: p.symbolName)
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundStyle(isCurrent ? .white : Color.secondary)
+                            .padding(11)
+                    }
+                    .frame(width: 48, height: 48)
+                    // Whole tile is the hit target.
+                    .contentShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .disabled(timer.mode != .idle)
