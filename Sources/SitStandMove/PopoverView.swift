@@ -38,15 +38,27 @@ struct PopoverView: View {
     // MARK: - Pieces
 
     private var loopIndicator: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             ForEach(Phase.loop, id: \.self) { p in
-                Image(systemName: p.symbolName)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(p == phase ? p.tint : Color.secondary.opacity(0.4))
-                    .scaleEffect(p == phase ? 1.15 : 1.0)
-                    .animation(.spring(response: 0.3), value: phase)
+                let isCurrent = p == phase
+                Button {
+                    timer.selectStartPhase(p)
+                } label: {
+                    Image(systemName: p.symbolName)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(isCurrent ? p.tint : Color.secondary.opacity(0.45))
+                        .frame(width: 30, height: 30)
+                        .background(
+                            Circle().fill(isCurrent ? p.tint.opacity(0.15) : .clear)
+                        )
+                        .scaleEffect(isCurrent ? 1.1 : 1.0)
+                }
+                .buttonStyle(.plain)
+                .disabled(timer.mode != .idle)
+                .help(timer.mode == .idle ? "Start with \(p.title)" : p.title)
             }
         }
+        .animation(.spring(response: 0.3), value: phase)
     }
 
     @ViewBuilder
@@ -103,7 +115,7 @@ struct PopoverView: View {
 
     private var subhead: String {
         switch timer.mode {
-        case .idle:         return "Ready when you are"
+        case .idle:         return "Tap an icon above to choose where to start"
         case .running:      return "remaining"
         case .paused:       return "Paused"
         case .awaitingNext: return "Tap start to begin"

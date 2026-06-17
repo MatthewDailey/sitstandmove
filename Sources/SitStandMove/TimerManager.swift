@@ -25,15 +25,36 @@ final class TimerManager: ObservableObject {
     private let order = Phase.loop
     private var ticker: Timer?
     private var deadline: Date?
+    private var settingsCancellable: AnyCancellable?
 
     init(settings: SettingsStore) {
         self.settings = settings
         self.remaining = settings.duration(for: order[0])
+
+        // Reflect duration changes live: republish so the panel/menu bar update,
+        // and resync the displayed time whenever we're not mid-countdown.
+        settingsCancellable = settings.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in self?.settingsChanged() }
+    }
+
+    private func settingsChanged() {
+        if mode == .idle || mode == .awaitingNext {
+            remaining = settings.duration(for: currentPhase)
+        }
+        objectWillChange.send()
     }
 
     // MARK: - Derived state
 
     var currentPhase: Phase { order[currentIndex] }
+
+    /// Choose which phase the loop begins with. Only meaningful before starting.
+    func selectStartPhase(_ phase: Phase) {
+        guard mode == .idle, let index = order.firstIndex(of: phase) else { return }
+        currentIndex = index
+        remaining = settings.duration(for: currentPhase)
+    }
 
     /// Seconds to display: live countdown while running/paused, otherwise the
     /// full configured duration for the current phase.
