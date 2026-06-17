@@ -1,0 +1,16 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Generated app bundle
+*.app
+dist/
+
+# macOS
+.DS_Store
+
+# Xcode (in case it's opened there)
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
