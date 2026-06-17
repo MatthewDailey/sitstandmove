@@ -71,8 +71,8 @@ struct FigureView: View {
             // Front-view arm pump: hands rise and fall in opposition.
             leftArm: [p(0.5 - 0.10, 0.33 + bob), p(0.5 - 0.13, 0.44 - 0.05 * s), p(0.5 - 0.15, 0.55 - 0.12 * s)],
             rightArm: [p(0.5 + 0.10, 0.33 + bob), p(0.5 + 0.13, 0.44 + 0.05 * s), p(0.5 + 0.15, 0.55 + 0.12 * s)],
-            leftLeg: [p(0.5 - 0.06, 0.56 + bob * 0.5), p(0.5 - 0.06, 0.74 - lk), p(0.5 - 0.07 + lk * 0.3, 0.92 - lk * 1.7)],
-            rightLeg: [p(0.5 + 0.06, 0.56 + bob * 0.5), p(0.5 + 0.06, 0.74 - rk), p(0.5 + 0.07 - rk * 0.3, 0.92 - rk * 1.7)],
+            leftLeg: [p(0.5 - 0.06, 0.56 + bob * 0.5), p(0.5 - 0.06, 0.74 - lk), p(0.5 - 0.06, 0.92 - lk * 1.5)],
+            rightLeg: [p(0.5 + 0.06, 0.56 + bob * 0.5), p(0.5 + 0.06, 0.74 - rk), p(0.5 + 0.06, 0.92 - rk * 1.5)],
             showChair: false
         )
     }
@@ -80,14 +80,15 @@ struct FigureView: View {
     private func sitPose(t: Double) -> Pose {
         let breathe = 0.005 * sin(t * 1.4)
         return Pose(
-            head: p(0.5, 0.22 + breathe),
-            torsoTop: p(0.5, 0.35 + breathe),
+            head: p(0.5, 0.21 + breathe),
+            torsoTop: p(0.5, 0.34 + breathe),
             torsoBottom: p(0.5, 0.60),
-            leftArm: [p(0.5 - 0.10, 0.37 + breathe), p(0.5 - 0.15, 0.50), p(0.5 - 0.16, 0.63)],
-            rightArm: [p(0.5 + 0.10, 0.37 + breathe), p(0.5 + 0.15, 0.50), p(0.5 + 0.16, 0.63)],
-            // Thighs angle out to the knees, shins drop straight down.
-            leftLeg: [p(0.5 - 0.06, 0.60), p(0.5 - 0.17, 0.65), p(0.5 - 0.17, 0.88)],
-            rightLeg: [p(0.5 + 0.06, 0.60), p(0.5 + 0.17, 0.65), p(0.5 + 0.17, 0.88)],
+            // Arms hang close to the body, hands resting by the thighs.
+            leftArm: [p(0.5 - 0.10, 0.37 + breathe), p(0.5 - 0.115, 0.49), p(0.5 - 0.12, 0.60)],
+            rightArm: [p(0.5 + 0.10, 0.37 + breathe), p(0.5 + 0.115, 0.49), p(0.5 + 0.12, 0.60)],
+            // Thighs angle out to the knees, shins drop straight down to the floor.
+            leftLeg: [p(0.5 - 0.07, 0.60), p(0.5 - 0.15, 0.63), p(0.5 - 0.15, 0.88)],
+            rightLeg: [p(0.5 + 0.07, 0.60), p(0.5 + 0.15, 0.63), p(0.5 + 0.15, 0.88)],
             showChair: true
         )
     }
@@ -119,16 +120,16 @@ struct FigureView: View {
     }
 
     private func drawChair(in context: GraphicsContext, size: CGSize) {
-        let shade = GraphicsContext.Shading.color(.secondary.opacity(0.35))
+        let shade = GraphicsContext.Shading.color(.secondary.opacity(0.4))
         let seat = CGRect(
-            x: 0.28 * size.width, y: 0.65 * size.height,
-            width: 0.44 * size.width, height: 0.055 * size.height
+            x: 0.29 * size.width, y: 0.63 * size.height,
+            width: 0.42 * size.width, height: 0.05 * size.height
         )
         context.fill(Path(roundedRect: seat, cornerRadius: 0.02 * size.width), with: shade)
-        for x in [0.33, 0.67] {
+        for x in [0.33, 0.655] {
             let leg = CGRect(
-                x: x * size.width, y: 0.70 * size.height,
-                width: 0.035 * size.width, height: 0.20 * size.height
+                x: x * size.width, y: 0.68 * size.height,
+                width: 0.035 * size.width, height: 0.22 * size.height
             )
             context.fill(Path(roundedRect: leg, cornerRadius: 0.012 * size.width), with: shade)
         }
