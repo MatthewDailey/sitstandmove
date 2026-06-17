@@ -5,7 +5,12 @@ throughout the day. It lives in your top bar, counts down the current phase, and
 when time's up it pops open a little panel with an animated figure doing the next
 action and a single button to start it.
 
-<!-- screenshot placeholder -->
+| Sit | Stand | Move |
+|:---:|:-----:|:----:|
+| <img src="assets/sit.png" width="140"> | <img src="assets/stand.png" width="140"> | <img src="assets/move.png" width="140"> |
+
+The little actor breathes while sitting, sways while standing, and marches in
+place while moving.
 
 ## How it works
 
