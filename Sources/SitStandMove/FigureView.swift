@@ -1,153 +1,131 @@
 import SwiftUI
 
-/// A little restroom-sign style person that performs the current action with a
-/// bit of looping motion: sitting (gentle breathing), standing (soft sway),
-/// or moving (marching in place).
+/// A little restroom-sign style person performing the current action, drawn as
+/// a crisp solid-white silhouette on a solid phase-color tile (the "Sign"
+/// design direction) with a bit of looping motion: breathing while sitting,
+/// swaying while standing, marching while moving.
+///
+/// All coordinates below live in a 0...120 space matching the source artwork,
+/// and are scaled to the view at draw time.
 struct FigureView: View {
     let phase: Phase
 
     var body: some View {
         TimelineView(.animation) { timeline in
             Canvas { context, size in
-                let t = timeline.date.timeIntervalSinceReferenceDate
-                drawScene(in: context, size: size, t: t)
+                draw(context, size, timeline.date.timeIntervalSinceReferenceDate)
             }
         }
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(phase.tint.opacity(0.12))
-        )
         .accessibilityLabel("\(phase.title) figure")
     }
 
-    // MARK: - Skeleton, posed per phase
-
-    /// Joints in a normalized 0...1 space (y points down), built fresh each
-    /// frame so the limbs can be animated.
-    private struct Pose {
-        var head: CGPoint
-        var torsoTop: CGPoint
-        var torsoBottom: CGPoint
-        var leftArm: [CGPoint]   // shoulder, elbow, hand
-        var rightArm: [CGPoint]
-        var leftLeg: [CGPoint]   // hip, knee, foot
-        var rightLeg: [CGPoint]
-        var showChair: Bool
-    }
-
-    private func pose(t: Double) -> Pose {
-        switch phase {
-        case .stand: return standPose(t: t)
-        case .move:  return movePose(t: t)
-        case .sit:   return sitPose(t: t)
-        }
-    }
-
-    private func standPose(t: Double) -> Pose {
-        let sway = 0.012 * sin(t * 1.5)
-        let bob = 0.004 * sin(t * 1.5)
-        let left = Pose(
-            head: p(0.5 + sway, 0.17 + bob),
-            torsoTop: p(0.5 + sway * 0.8, 0.30 + bob),
-            torsoBottom: p(0.5, 0.56),
-            leftArm: [p(0.5 + sway - 0.10, 0.33 + bob), p(0.5 + sway - 0.13, 0.45), p(0.5 + sway - 0.14, 0.57)],
-            rightArm: [p(0.5 + sway + 0.10, 0.33 + bob), p(0.5 + sway + 0.13, 0.45), p(0.5 + sway + 0.14, 0.57)],
-            leftLeg: [p(0.5 - 0.06, 0.56), p(0.5 - 0.055, 0.74), p(0.5 - 0.06, 0.92)],
-            rightLeg: [p(0.5 + 0.06, 0.56), p(0.5 + 0.055, 0.74), p(0.5 + 0.06, 0.92)],
-            showChair: false
-        )
-        return left
-    }
-
-    private func movePose(t: Double) -> Pose {
-        let s = sin(t * 5.5)
-        let bob = -abs(s) * 0.012
-        let rk = max(0, s) * 0.13   // right knee lift
-        let lk = max(0, -s) * 0.13  // left knee lift
-        return Pose(
-            head: p(0.5, 0.17 + bob),
-            torsoTop: p(0.5, 0.30 + bob),
-            torsoBottom: p(0.5, 0.56 + bob * 0.5),
-            // Front-view arm pump: hands rise and fall in opposition.
-            leftArm: [p(0.5 - 0.10, 0.33 + bob), p(0.5 - 0.13, 0.44 - 0.05 * s), p(0.5 - 0.15, 0.55 - 0.12 * s)],
-            rightArm: [p(0.5 + 0.10, 0.33 + bob), p(0.5 + 0.13, 0.44 + 0.05 * s), p(0.5 + 0.15, 0.55 + 0.12 * s)],
-            leftLeg: [p(0.5 - 0.06, 0.56 + bob * 0.5), p(0.5 - 0.06, 0.74 - lk), p(0.5 - 0.06, 0.92 - lk * 1.5)],
-            rightLeg: [p(0.5 + 0.06, 0.56 + bob * 0.5), p(0.5 + 0.06, 0.74 - rk), p(0.5 + 0.06, 0.92 - rk * 1.5)],
-            showChair: false
-        )
-    }
-
-    private func sitPose(t: Double) -> Pose {
-        let breathe = 0.005 * sin(t * 1.4)
-        return Pose(
-            head: p(0.5, 0.21 + breathe),
-            torsoTop: p(0.5, 0.34 + breathe),
-            torsoBottom: p(0.5, 0.60),
-            // Arms hang close to the body, hands resting by the thighs.
-            leftArm: [p(0.5 - 0.10, 0.37 + breathe), p(0.5 - 0.115, 0.49), p(0.5 - 0.12, 0.60)],
-            rightArm: [p(0.5 + 0.10, 0.37 + breathe), p(0.5 + 0.115, 0.49), p(0.5 + 0.12, 0.60)],
-            // Thighs angle out to the knees, shins drop straight down to the floor.
-            leftLeg: [p(0.5 - 0.07, 0.60), p(0.5 - 0.15, 0.63), p(0.5 - 0.15, 0.88)],
-            rightLeg: [p(0.5 + 0.07, 0.60), p(0.5 + 0.15, 0.63), p(0.5 + 0.15, 0.88)],
-            showChair: true
-        )
-    }
+    private struct Limb { var points: [CGPoint]; var width: Double }
+    private struct Figure { var head: CGPoint; var headRadius: Double; var limbs: [Limb]; var props: [Limb] }
 
     // MARK: - Rendering
 
-    private func drawScene(in context: GraphicsContext, size: CGSize, t: Double) {
-        let pose = pose(t: t)
+    private func draw(_ ctx: GraphicsContext, _ size: CGSize, _ t: Double) {
         let unit = min(size.width, size.height)
-        let limb = StrokeStyle(lineWidth: unit * 0.075, lineCap: .round, lineJoin: .round)
-        let color = GraphicsContext.Shading.color(phase.tint)
+        let scale = unit / 120.0
 
-        if pose.showChair {
-            drawChair(in: context, size: size)
+        // Solid phase-color tile: the high-contrast backdrop that makes the
+        // white figure pop and stay distinct from the panel behind it.
+        let margin = 6.0 * scale
+        let tileRect = CGRect(x: margin, y: margin,
+                              width: size.width - 2 * margin,
+                              height: size.height - 2 * margin)
+        ctx.fill(Path(roundedRect: tileRect, cornerRadius: 26 * scale), with: .color(phase.tint))
+
+        let figure = figure(t: t)
+        let white = GraphicsContext.Shading.color(.white)
+
+        for limb in figure.props + figure.limbs {
+            ctx.stroke(path(limb.points, size), with: white,
+                       style: StrokeStyle(lineWidth: limb.width * scale, lineCap: .round, lineJoin: .round))
         }
 
-        // Limbs and torso.
-        context.stroke(polyline(pose.leftLeg, size), with: color, style: limb)
-        context.stroke(polyline(pose.rightLeg, size), with: color, style: limb)
-        context.stroke(polyline([pose.torsoTop, pose.torsoBottom], size), with: color, style: limb)
-        context.stroke(polyline(pose.leftArm, size), with: color, style: limb)
-        context.stroke(polyline(pose.rightArm, size), with: color, style: limb)
-
-        // Head.
-        let r = unit * 0.105
-        let c = scale(pose.head, size)
-        let headRect = CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)
-        context.fill(Path(ellipseIn: headRect), with: color)
+        let r = figure.headRadius * scale
+        let c = point(figure.head, size)
+        ctx.fill(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r)), with: white)
     }
 
-    private func drawChair(in context: GraphicsContext, size: CGSize) {
-        let shade = GraphicsContext.Shading.color(.secondary.opacity(0.4))
-        let seat = CGRect(
-            x: 0.29 * size.width, y: 0.63 * size.height,
-            width: 0.42 * size.width, height: 0.05 * size.height
-        )
-        context.fill(Path(roundedRect: seat, cornerRadius: 0.02 * size.width), with: shade)
-        for x in [0.33, 0.655] {
-            let leg = CGRect(
-                x: x * size.width, y: 0.68 * size.height,
-                width: 0.035 * size.width, height: 0.22 * size.height
-            )
-            context.fill(Path(roundedRect: leg, cornerRadius: 0.012 * size.width), with: shade)
+    // MARK: - Poses
+
+    private func figure(t: Double) -> Figure {
+        switch phase {
+        case .sit:   return sit(t)
+        case .stand: return stand(t)
+        case .move:  return move(t)
         }
+    }
+
+    private func sit(_ t: Double) -> Figure {
+        let b = sin(t * 1.6) * 1.3   // gentle breathing of the upper body
+        return Figure(
+            head: CGPoint(x: 55, y: 30 + b),
+            headRadius: 12,
+            limbs: [
+                Limb(points: [CGPoint(x: 55, y: 46 + b), CGPoint(x: 57, y: 67)], width: 17),  // torso
+                Limb(points: [CGPoint(x: 55, y: 67), CGPoint(x: 80, y: 67)], width: 16),       // thigh
+                Limb(points: [CGPoint(x: 80, y: 67), CGPoint(x: 80, y: 88)], width: 13),       // shin
+                Limb(points: [CGPoint(x: 58, y: 52 + b * 0.7), CGPoint(x: 41, y: 62 + b * 0.3)], width: 11), // arm
+            ],
+            props: [
+                Limb(points: [CGPoint(x: 42, y: 90), CGPoint(x: 82, y: 90)], width: 9),  // seat
+                Limb(points: [CGPoint(x: 47, y: 92), CGPoint(x: 47, y: 109)], width: 8), // chair leg
+                Limb(points: [CGPoint(x: 77, y: 92), CGPoint(x: 77, y: 109)], width: 8), // chair leg
+            ]
+        )
+    }
+
+    private func stand(_ t: Double) -> Figure {
+        let sx = sin(t * 1.5) * 1.5   // gentle sway of the upper body
+        return Figure(
+            head: CGPoint(x: 60 + sx, y: 29),
+            headRadius: 12,
+            limbs: [
+                Limb(points: [CGPoint(x: 60 + sx, y: 45), CGPoint(x: 60, y: 74)], width: 18), // torso
+                Limb(points: [CGPoint(x: 54, y: 76), CGPoint(x: 54, y: 102)], width: 13),      // leg
+                Limb(points: [CGPoint(x: 66, y: 76), CGPoint(x: 66, y: 102)], width: 13),      // leg
+                Limb(points: [CGPoint(x: 50 + sx, y: 50), CGPoint(x: 48, y: 74)], width: 11),  // arm
+                Limb(points: [CGPoint(x: 70 + sx, y: 50), CGPoint(x: 72, y: 74)], width: 11),  // arm
+            ],
+            props: []
+        )
+    }
+
+    private func move(_ t: Double) -> Figure {
+        let s = sin(t * 5.0)
+        let bob = -abs(s) * 1.6        // body rises slightly with each step
+        let lift = 14.0
+        let lk = max(0, -s) * lift     // left knee/foot lift
+        let rk = max(0,  s) * lift     // right knee/foot lift
+        let hipY = 73 + bob * 0.6
+        return Figure(
+            head: CGPoint(x: 60, y: 29 + bob),
+            headRadius: 12,
+            limbs: [
+                Limb(points: [CGPoint(x: 60, y: 45 + bob), CGPoint(x: 59, y: 71 + bob * 0.6)], width: 18), // torso
+                Limb(points: [CGPoint(x: 54, y: hipY), CGPoint(x: 54, y: 90 - lk), CGPoint(x: 54, y: 104 - lk * 1.5)], width: 13),
+                Limb(points: [CGPoint(x: 66, y: hipY), CGPoint(x: 66, y: 90 - rk), CGPoint(x: 66, y: 104 - rk * 1.5)], width: 13),
+                Limb(points: [CGPoint(x: 51, y: 50 + bob), CGPoint(x: 45, y: 64 - 8 * s)], width: 11), // arm
+                Limb(points: [CGPoint(x: 69, y: 50 + bob), CGPoint(x: 75, y: 64 + 8 * s)], width: 11), // arm
+            ],
+            props: []
+        )
     }
 
     // MARK: - Helpers
 
-    private func p(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: x, y: y) }
-
-    private func scale(_ pt: CGPoint, _ size: CGSize) -> CGPoint {
-        CGPoint(x: pt.x * size.width, y: pt.y * size.height)
+    private func point(_ p: CGPoint, _ size: CGSize) -> CGPoint {
+        CGPoint(x: p.x / 120 * size.width, y: p.y / 120 * size.height)
     }
 
-    private func polyline(_ points: [CGPoint], _ size: CGSize) -> Path {
+    private func path(_ points: [CGPoint], _ size: CGSize) -> Path {
         var path = Path()
         guard let first = points.first else { return path }
-        path.move(to: scale(first, size))
-        for pt in points.dropFirst() { path.addLine(to: scale(pt, size)) }
+        path.move(to: point(first, size))
+        for p in points.dropFirst() { path.addLine(to: point(p, size)) }
         return path
     }
 }
