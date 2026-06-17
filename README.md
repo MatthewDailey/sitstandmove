@@ -11,9 +11,6 @@ action and a single button to start it.
 |:---:|:-----:|:----:|
 | <img src="assets/sit.png" width="140"> | <img src="assets/stand.png" width="140"> | <img src="assets/move.png" width="140"> |
 
-The little actor breathes while sitting, sways while standing, and bobs along
-while walking.
-
 ## How it works
 
 1. Click the menu bar icon to open the panel. It shows the first phase (**Sit**),
@@ -35,6 +32,11 @@ While a phase is running you can **Pause** or **Skip** from the panel.
 - **Quit**.
 
 Durations are the only setting, and they persist between launches.
+
+The defaults — **20 min sit · 8 min stand · 2 min move** — follow the widely-cited
+**20-8-2 rule** from office-ergonomics research (Cornell University Ergonomics /
+Prof. Alan Hedge): for every half hour at a desk, sit for about 20 minutes, stand
+for 8, then move for 2.
 
 ## Build & run
 

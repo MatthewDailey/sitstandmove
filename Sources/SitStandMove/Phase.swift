@@ -34,9 +34,14 @@ enum Phase: String, CaseIterable, Codable {
     static let loop: [Phase] = [.sit, .stand, .move]
 
     /// Default duration in minutes, used the first time the app runs.
+    ///
+    /// These follow the widely-cited **20-8-2 rule** from office-ergonomics
+    /// research (Cornell University Ergonomics / Prof. Alan Hedge): for each
+    /// half hour, sit ~20 min, stand ~8 min, then move ~2 min — the ratio found
+    /// to best break up prolonged sitting without tiring you out.
     var defaultMinutes: Double {
         switch self {
-        case .sit:   return 30
+        case .sit:   return 20
         case .stand: return 8
         case .move:  return 2
         }
