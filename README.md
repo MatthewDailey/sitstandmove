@@ -15,7 +15,8 @@ while walking.
 ## How it works
 
 1. Click the menu bar icon to open the panel. It shows the first phase (**Sit**),
-   how long it will last, and a **Start** button.
+   how long it will last, and a **Start** button. Tap any of the **Sit / Stand /
+   Move** tiles at the top to choose which phase to begin with.
 2. Press **Start**. The panel closes and the menu bar shows a live countdown.
 3. When the phase ends, a chime plays and the panel pops back open showing the
    **next** action (e.g. *"Time to stand"*) with its little actor and duration.
@@ -57,8 +58,8 @@ Sources/SitStandMove/
   TimerManager.swift  # The sit/stand/move loop state machine + countdown
   SettingsStore.swift # Persisted per-phase durations
   Phase.swift         # The three phases (titles, icons, colors)
-  PopoverView.swift   # The pop-out panel UI
-  FigureView.swift    # The animated restroom-pictogram actor
+  PopoverView.swift   # The pop-out panel UI + tappable phase selectors
+  FigureView.swift    # The animated actor (white SF Symbol on a color tile)
   SettingsView.swift  # Duration settings
 scripts/bundle.sh     # Wraps the binary into a .app bundle
 ```

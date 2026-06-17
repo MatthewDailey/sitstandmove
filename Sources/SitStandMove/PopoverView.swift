@@ -14,7 +14,7 @@ struct PopoverView: View {
 
             Text(headline)
                 .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundStyle(phase.tint)
+                .foregroundStyle(.primary)
 
             FigureView(phase: phase)
                 .frame(width: 132, height: 132)
@@ -24,9 +24,11 @@ struct PopoverView: View {
                 .monospacedDigit()
                 .foregroundStyle(.primary)
 
-            Text(subhead)
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
+            if !subhead.isEmpty {
+                Text(subhead)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            }
 
             controls
                 .padding(.top, 2)
@@ -121,7 +123,7 @@ struct PopoverView: View {
 
     private var subhead: String {
         switch timer.mode {
-        case .idle:         return "Tap an icon above to choose where to start"
+        case .idle:         return ""
         case .running:      return "remaining"
         case .paused:       return "Paused"
         case .awaitingNext: return "Tap start to begin"
