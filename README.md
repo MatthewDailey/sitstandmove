@@ -44,12 +44,17 @@ Requires macOS 13+ and a Swift toolchain (Xcode or the Command Line Tools).
 # Run it directly (great for development; Ctrl-C to quit):
 make run
 
-# Or build a proper menu-bar app bundle and launch it:
+# Build a release .app bundle and launch it from dist/:
 make open
+
+# Install it into /Applications (no longer tied to this source tree):
+make install
 ```
 
-`make open` produces `dist/SitStandMove.app`, which you can drag into
-`/Applications` and add to your Login Items so it's always available.
+After `make install`, launch **SitStandMove** from Launchpad/Spotlight, then
+**right-click** the menu bar icon and choose **Launch at Login** so it starts
+automatically each time you log in (toggle it off there or in System Settings ›
+General › Login Items to disable).
 
 ## Project layout
 

@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import Combine
+import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
@@ -88,6 +89,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .target = self
         menu.addItem(withTitle: "Reset Loop", action: #selector(resetLoop), keyEquivalent: "")
             .target = self
+
+        let launch = NSMenuItem(title: "Launch at Login",
+                                action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        launch.target = self
+        launch.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
+        menu.addItem(launch)
+
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit SitStandMove", action: #selector(quit), keyEquivalent: "q")
             .target = self
@@ -135,6 +143,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func resetLoop() {
         timer.reset()
         updateStatusButton()
+    }
+
+    @objc private func toggleLaunchAtLogin() {
+        do {
+            if SMAppService.mainApp.status == .enabled {
+                try SMAppService.mainApp.unregister()
+            } else {
+                try SMAppService.mainApp.register()
+            }
+        } catch {
+            NSLog("SitStandMove: launch-at-login toggle failed: \(error.localizedDescription)")
+        }
     }
 
     @objc private func quit() {
