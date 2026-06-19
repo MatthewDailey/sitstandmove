@@ -18,10 +18,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // Remember where the user Cmd-drags the icon, across relaunches.
+        statusItem.autosaveName = "SitStandMove"
         if let button = statusItem.button {
             button.action = #selector(statusButtonClicked(_:))
             button.target = self
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+            // Monospaced digits so the ticking countdown keeps a fixed width and
+            // doesn't shove the icon back and forth.
+            let size = button.font?.pointSize ?? NSFont.systemFontSize
+            button.font = NSFont.monospacedDigitSystemFont(ofSize: size, weight: .regular)
         }
 
         popover.behavior = .transient
@@ -58,10 +64,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         switch timer.mode {
         case .running, .paused:
             button.title = " " + Self.format(timer.remaining)
-        case .awaitingNext:
-            button.title = " " + phase.title
-        case .idle:
-            button.title = ""
+        case .idle, .awaitingNext:
+            button.title = ""  // just the icon when no countdown is running
         }
     }
 
