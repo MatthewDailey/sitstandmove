@@ -67,6 +67,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .idle, .awaitingNext:
             button.title = ""  // just the icon when no countdown is running
         }
+
+        // Pin a fixed width so the item never shifts as the icon or countdown
+        // changes; reserves room for the icon + the longest configured time.
+        statusItem.length = fixedStatusLength()
+    }
+
+    /// A constant status-item width sized for the icon plus the widest countdown.
+    private func fixedStatusLength() -> CGFloat {
+        guard let font = statusItem.button?.font else { return 72 }
+        let longestMinutes = max(settings.sitMinutes, settings.standMinutes, settings.moveMinutes)
+        let widest = " " + Self.format(longestMinutes * 60)
+        let textWidth = (widest as NSString).size(withAttributes: [.font: font]).width
+        return ceil(textWidth) + 30  // icon + image/title spacing + button padding
     }
 
     static func format(_ seconds: TimeInterval) -> String {
