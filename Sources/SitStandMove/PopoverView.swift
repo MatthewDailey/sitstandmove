@@ -65,8 +65,8 @@ struct PopoverView: View {
                     .contentShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
                 }
                 .buttonStyle(.plain)
-                .disabled(timer.mode != .idle)
-                .help(timer.mode == .idle ? "Start with \(p.title)" : p.title)
+                .disabled(timer.mode == .running)
+                .help(timer.mode == .running ? p.title : "Switch to \(p.title)")
             }
         }
         .animation(.spring(response: 0.3), value: phase)

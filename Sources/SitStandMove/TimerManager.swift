@@ -49,11 +49,16 @@ final class TimerManager: ObservableObject {
 
     var currentPhase: Phase { order[currentIndex] }
 
-    /// Choose which phase the loop begins with. Only meaningful before starting.
+    /// Pick which phase is active. Allowed any time the loop isn't actively
+    /// counting down (idle, paused, or awaiting the next phase). Switches to the
+    /// chosen phase, resets it to its full duration, and parks it ready to start.
     func selectStartPhase(_ phase: Phase) {
-        guard mode == .idle, let index = order.firstIndex(of: phase) else { return }
+        guard mode != .running, let index = order.firstIndex(of: phase) else { return }
+        stopTicker()
+        deadline = nil
         currentIndex = index
         remaining = settings.duration(for: currentPhase)
+        mode = .idle
     }
 
     /// Seconds to display: live countdown while running/paused, otherwise the
