@@ -69,7 +69,6 @@ struct PopoverView: View {
                 .help(timer.mode == .running ? p.title : "Switch to \(p.title)")
             }
         }
-        .animation(.spring(response: 0.3), value: phase)
     }
 
     @ViewBuilder
