@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let popover = NSPopover()
     private var settingsWindow: NSWindow?
     private var cancellable: AnyCancellable?
+    private var iconAllowance: CGFloat = 18  // widest phase icon, measured at launch
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Menu-bar-only: keep the app out of the Dock and the app switcher.
@@ -29,6 +30,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let size = button.font?.pointSize ?? NSFont.systemFontSize
             button.font = NSFont.monospacedDigitSystemFont(ofSize: size, weight: .regular)
         }
+
+        iconAllowance = Phase.loop.compactMap {
+            NSImage(systemSymbolName: $0.symbolName, accessibilityDescription: nil)?.size.width
+        }.max() ?? 18
 
         popover.behavior = .transient
         popover.animates = true
@@ -68,18 +73,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.title = ""  // just the icon when no countdown is running
         }
 
-        // Pin a fixed width so the item never shifts as the icon or countdown
-        // changes; reserves room for the icon + the longest configured time.
+        // Two fixed widths so the item never shifts within a mode: a narrow,
+        // icon-only width when not timing, and a wider icon+countdown width while
+        // timing. (The width only changes once, when a timer starts or stops.)
         statusItem.length = fixedStatusLength()
     }
 
-    /// A constant status-item width sized for the icon plus the widest countdown.
     private func fixedStatusLength() -> CGFloat {
-        guard let font = statusItem.button?.font else { return 72 }
-        let longestMinutes = max(settings.sitMinutes, settings.standMinutes, settings.moveMinutes)
-        let widest = " " + Self.format(longestMinutes * 60)
-        let textWidth = (widest as NSString).size(withAttributes: [.font: font]).width
-        return ceil(textWidth) + 30  // icon + image/title spacing + button padding
+        switch timer.mode {
+        case .running, .paused:
+            guard let font = statusItem.button?.font else { return 72 }
+            let longestMinutes = max(settings.sitMinutes, settings.standMinutes, settings.moveMinutes)
+            let widest = " " + Self.format(longestMinutes * 60)
+            let textWidth = (widest as NSString).size(withAttributes: [.font: font]).width
+            return ceil(textWidth) + 30  // icon + image/title spacing + button padding
+        case .idle, .awaitingNext:
+            return ceil(iconAllowance) + 18  // widest icon + button padding
+        }
     }
 
     static func format(_ seconds: TimeInterval) -> String {
